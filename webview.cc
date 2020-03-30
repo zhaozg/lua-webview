@@ -29,7 +29,8 @@ static int lua_webview_open(lua_State *L)
   int height = luaL_optint(L, 4, 600);
   const char* shits[] = { "none", "min", "max", "fixed" };
   int hints = luaL_checkoption(L, 5, "none", shits);
-  webview_t w = webview_create(false, nullptr);
+  int dbg = lua_toboolean(L, 6);
+  webview_t w = webview_create(dbg, nullptr);
 
   *(webview_t*)lua_newuserdata(L, sizeof(webview_t)) = w;
   lua_pushlightuserdata(L, w);
@@ -47,7 +48,8 @@ static int lua_webview_open(lua_State *L)
 
 static int lua_webview_create(lua_State *L)
 {
-  webview_t w = webview_create(false, nullptr);
+  int dbg = lua_toboolean(L, 1);
+  webview_t w = webview_create(dbg, nullptr);
   *(webview_t*)lua_newuserdata(L, sizeof(webview_t)) = w;
   lua_pushlightuserdata(L, w);
   lua_newtable(L);
