@@ -141,7 +141,6 @@ static int lua_webview_dispatch(lua_State *L)
 {
   webview_t w = lua_webview_check(L, 1);
   Webview_Arg_t *arg;
-  int idx;
 
   luaL_checktype(L, 2, LUA_TFUNCTION);
 
