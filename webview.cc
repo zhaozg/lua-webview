@@ -304,7 +304,7 @@ static  luaL_Reg webview_mt[] =
   { "init", lua_webview_init },
   { "eval", lua_webview_eval },
   { "bind", lua_webview_bind },
-  { "return", lua_webview_return },
+  { "returns", lua_webview_return },
 
   { "__tostring", lua_webview_tostring },
   { "__gc", lua_webview_destroy },
@@ -330,7 +330,7 @@ static  luaL_Reg webview_lib[] =
   { "init", lua_webview_init },
   { "eval", lua_webview_eval },
   { "bind", lua_webview_bind },
-  { "return", lua_webview_return },
+  { "returns", lua_webview_return },
 
   { NULL, NULL }
 };
