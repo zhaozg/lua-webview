@@ -1,5 +1,4 @@
 // wget https://raw.githubusercontent.com/zserge/webview/master/webview.h
-#define WEBVIEW_IMPLEMENTATION
 #include "webview.h"
 
 #include <lua.hpp>
@@ -102,6 +101,7 @@ static int lua_webview_run(lua_State *L)
 
 static inline void lua_webview_terminal_cb(webview_t w, void *arg)
 {
+  (void)arg;
   webview_terminate(w);
 }
 
@@ -123,6 +123,8 @@ static inline void lua_webview_dispatch_cb(webview_t w, void *arg)
   Webview_Arg_t *warg = (Webview_Arg_t*)arg;
   lua_State *L = warg->L;
   int ret;
+
+  (void)w;
 
   lua_rawgeti(L, LUA_REGISTRYINDEX, warg->cbref);
   lua_rawgeti(L, LUA_REGISTRYINDEX, warg->argref);
@@ -357,7 +359,7 @@ static void luaL_newclass(lua_State *L, const char *classname, luaL_Reg *func)
   lua_pop(L, 1);
 }
 
-#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM == 501
+#if defined(LUA_VERSION_NUM) && LUA_VERSION_NUM == 501 && !defined(LUA_LJDIR)
 void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
   luaL_checkstack(L, nup+1, "too many upvalues");
   for (; l->name != NULL; l++) {  /* fill the table with given functions */

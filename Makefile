@@ -7,15 +7,15 @@ LUA_VERSION = $(shell $(LUA) -e "print(string.sub(_VERSION, 5))")
 LUA_LIBNAME = lua$(subst .,,$(LUA_VERSION))
 LUA_INCDIR ?= /usr/local/include/luajit-2.1
 LUA_LIBDIR ?= /usr/local/lib
+INST_LIBDIR ?= /usr/local/lib/lua/5.1
 
-CFLAGS_darwin = -Wall -Wextra -Wno-unused-parameter -Wstrict-prototypes \
-		 -DWEBVIEW_COCOA=1 -I$(LUA_INCDIR)
-LIBFLAG_darwin = -shared -framework Cocoa -framework WebKit -L$(LUA_LIBDIR) -lluajit-5.1
+CFLAGS_darwin = -Wall -Wextra -pedantic -I$(LUA_INCDIR)
+LIBFLAG_darwin = -shared -framework WebKit $(LUA_LIBDIR)/libluajit-5.1.a
 TARGET_darwin = $(LIBNAME).so
 
 
 CFLAGS_windows = -Wall -Wextra -Wno-unused-parameter -Wstrict-prototypes \
-		 -I$(LUA_INCDIR) -DWEBVIEW_WINAPI=1
+		 -I$(LUA_INCDIR)
 LIBFLAG_windows = -O -shared -Wl,-s -L$(LUA_LIBDIR) -l$(LUA_LIBNAME) -static-libgcc \
 		  -lole32 -lcomctl32 -loleaut32 -luuid -mwindows
 TARGET_windows = $(LIBNAME).dll
