@@ -1,5 +1,7 @@
+local webviewLib = require('webview')
+
 -- Default web content
-local url = [[data:text/html,<!DOCTYPE html>
+local url = "data:text/html," .. webviewLib.urlencode [[<!DOCTYPE html>
 <html>
   <body>
     <h1>Welcome !</h1>
@@ -13,7 +15,7 @@ local urlArg = arg[1]
 if urlArg and urlArg ~= '' then
   if urlArg == '-h' or urlArg == '/?' or urlArg == '--help' then
     print('Opens a WebView using the specified URL')
-    print('Optional arguments: url title width height sizehints')
+    print('Optional arguments: url title width height resizable debug')
     os.exit(0)
   end
   local protocol = string.match(urlArg, '^([^:]+):.+$')
@@ -26,10 +28,15 @@ if urlArg and urlArg ~= '' then
     os.exit(22)
   end
 end
+
 local title = arg[2] or 'Web View'
 local width = arg[3] or 800
 local height = arg[4] or 600
-local hints = arg[5] or 'none'
+local resizable = arg[5] ~= 'false'
+local dbg = arg[6] == 'true'
 
 -- Opens the web view
-require('webview').open(url, title, width, height, hints):run()
+
+webview = webviewLib.new(url, title, width, height, resizable, dbg)
+webviewLib.loop(webview)
+
