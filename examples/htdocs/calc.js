@@ -24,19 +24,22 @@ var calc = new Vue({
     },
     calculate: function() {
       var calc = this;
-      fetch('rest/calculate', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          line: calc.value
-        })
-      }).then(function(response) {
-        return response.json();
-      }).then(function(response) {
-        calc.value = '' + response.line;
-      });
+      webview.calcit(this.value, function(val) {
+         calc.value = val;
+      })
+      //fetch('rest/calculate', {
+      //  method: 'POST',
+      //  headers: {
+      //    "Content-Type": "application/json"
+      //  },
+      //  body: JSON.stringify({
+      //    line: calc.value
+      //  })
+      //}).then(function(response) {
+      //  return response.json();
+      //}).then(function(response) {
+      //  calc.value = '' + response.line;
+      //});
     }
   }
 });

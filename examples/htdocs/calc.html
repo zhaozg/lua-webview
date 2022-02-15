@@ -57,9 +57,20 @@
         </tbody>
       </table>
     </section>
+
+    <script type="text/lua">
+      context.exposeAll({
+        calcit = function(value, callback)
+          local val = assert(loadstring("return "..value))()
+          callback(tostring(val));
+        end
+      })
+    </script>
+
     <script src="assets/promise.min.js" type="text/javascript"></script>
     <script src="assets/fetch.umd.js" type="text/javascript"></script>
     <script src="assets/vue.min.js" type="text/javascript"></script>
+    <script src="../../webview-init.js" type="text/javascript"></script>
     <script src="calc.js" type="text/javascript"></script>
   </body>
 </html>
