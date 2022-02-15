@@ -275,19 +275,21 @@ end
 
 -- Executes the specified Lua file relative to the URL
 local function evalLuaSrc(value, callback, context, webview)
-  local content
+  local content, err
   if context.luaSrcPath then
     local path = context.luaSrcPath..fileSeparator..string.gsub(value, '[/\\]+', fileSeparator)
-    local file = io.open(path)
+    local file, err = io.open(path)
     if file then
-      content = file:read('a')
+      content, err = file:read('a')
       file:close()
     end
   end
   if content then
     evalLua(content, callback, context, webview)
   else
-    handleCallback(callback, 'Cannot load Lua file from src "'..tostring(value)..'"')
+    handleCallback(callback, string.format('Cannot load Lua file from src "%s", %s',
+    value, err or "unknow reason")
+    )
   end
 end
 

@@ -79,7 +79,7 @@
       showAll: false,
       showCancel: true,
       showSettings: false,
-      fetch: false
+      fetch: true
     }; },
     methods: {
       onFilePressed: function(file) {
@@ -88,7 +88,7 @@
           return;
         }
         if (!this.multiple) {
-          this.files.forEach(function(f) { 
+          this.files.forEach(function(f) {
             if (f !== file) {
               f.selected = false;
             }
@@ -119,7 +119,7 @@
             var path = files.shift();
             fc.show(path, files);
           } else {
-            fc.error(reason);            
+            fc.error(reason);
           }
         });
       },
@@ -197,7 +197,7 @@
       path: '',
       files: [],
       size: 40,
-      fetch: false
+      fetch: true
     }; },
     methods: {
       nameChanged: function() {
@@ -237,7 +237,7 @@
             var path = files.shift();
             fc.show(path, files);
           } else {
-            this.error(reason);            
+            this.error(reason);
           }
         });
       },

@@ -37,9 +37,9 @@ html {
     <div class="section">
       <h5>Using a dedicated panel</h5>
       <button v-on:click="openFileChooser()">Open</button>
-      <button v-on:click="openFileChooser({multiple: true})">Multiple</button>
-      <button v-on:click="openFileChooser({save: true, label: 'Save'})">Save</button>
-      <button v-on:click="openFileChooser({directory: true})">Directory</button>
+      <button v-on:click="openFileChooser({multiple: true, fetch: true})">Multiple</button>
+      <button v-on:click="openFileChooser({save: true, label: 'Save', fetch: true})">Save</button>
+      <button v-on:click="openFileChooser({directory: true, fetch: true})">Directory</button>
       <p><span>{{ filename }}</span></p>
     </div>
     <div class="section">
@@ -64,8 +64,5 @@ html {
         }
       }
     });
-    function onWebviewInitalized(webview) {
-      vm.$refs.fileChooserInput.list('.');
-    };
   </script>
 </body></html>
