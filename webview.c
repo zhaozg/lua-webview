@@ -326,7 +326,7 @@ static int lua_webview_gc(lua_State *l) {
 	return 0;
 }
 
-static bool is_non_symbol(char c)
+static int is_non_symbol(char c)
 {
     if(c == '\0') return 1; //we want to write null regardless
     int c_int = (int)c;
