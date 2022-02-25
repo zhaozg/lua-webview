@@ -21,13 +21,17 @@ LUA_LIBDIR_OPT=-L/usr/local/lib -lluajit-5.1
 endif
 
 LUA_INCDIR = /usr/local/include/luajit-2.1
-
-
+ifeq ($(PLAT),windows)
+LUA_LIBDIR_OPT+=$(LUA_LIBDIR)/luajit.lib
+LUA_LIBNAME=luajit
+else
+LUA_LIBDIR_OPT+=-lluajit-5.1
 #LUA_APP = $(LUA_BINDIR)/$(LUA)
 LUA_APP = $(LUA)
 LUA_VERSION = $(shell $(LUA_APP) -e "print(string.sub(_VERSION, 5))")
 LUA_LIBNAME = lua$(subst .,,$(LUA_VERSION))
 WEBVIEW_ARCH = x64
+endif
 
 LUA_BITS = $(shell $(LUA_APP) -e "print(string.len(string.pack('T', 0)) * 8)")
 
@@ -50,9 +54,9 @@ CFLAGS_windows = -Wall \
 LIBFLAG_windows = -O \
   -shared \
   -Wl,-s \
-  $(LUA_LIBDIR_OPT) -l$(LUA_LIBNAME) \
   -static-libgcc \
-  -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32
+  -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 \
+  $(LUA_LIBDIR_OPT) -l$(LUA_LIBNAME) \
 
 TARGET_windows = $(LIBNAME).dll
 

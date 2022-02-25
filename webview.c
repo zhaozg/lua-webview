@@ -1,4 +1,5 @@
 #include <lua.h>
+#include <lualib.h>
 #include <lauxlib.h>
 
 #define WEBVIEW_IMPLEMENTATION
@@ -12,7 +13,7 @@
 ********************************************************************************
 */
 
-#if LUA_VERSION_NUM < 502
+#if LUA_VERSION_NUM < 502 && !defined(LUA_JITLIBNAME)
 // From Lua 5.3 lauxlib.c
 LUALIB_API void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
   luaL_checkstack(L, nup, "too many upvalues");
@@ -109,7 +110,7 @@ static int lua_webview_open(lua_State *l) {
 
 static LuaWebView *lua_webview_asudata(lua_State *l, int ud) {
 	if (lua_islightuserdata(l, ud)) {
-		return lua_touserdata(l, ud);
+		return (LuaWebView *)lua_touserdata(l, ud);
 	}
 	return (LuaWebView *)luaL_checkudata(l, ud, "webview");
 }
@@ -339,7 +340,7 @@ static char *url_decode(const char *input, size_t input_length)
 {
 	input_length = input_length > 0 ? input_length : strlen(input);
 	size_t output_length = (input_length + 1) * sizeof(char);
-	char *working = malloc(output_length), *output = working;
+	char *working = (char *)malloc(output_length), *output = working;
 
 	while(*input)
 	{
@@ -363,7 +364,7 @@ char *url_encode(const char *input, size_t input_length)
 {
     input_length = input_length>0 ? input_length : strlen(input);
     size_t final_size = (input_length * 3) + 1;
-    char *working = malloc(final_size * sizeof(char)), *output = working;
+    char *working = (char *)malloc(final_size * sizeof(char)), *output = working;
 
     while(*input)
     {
