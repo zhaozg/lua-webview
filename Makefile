@@ -11,6 +11,7 @@
 
 CC ?= gcc
 
+LUA  ?= luajit
 PLAT ?= windows
 LIBNAME = webview
 
@@ -33,10 +34,14 @@ LUA_LIBNAME = lua$(subst .,,$(LUA_VERSION))
 WEBVIEW_ARCH = x64
 endif
 
+ifeq ($(PLAT), windows)
+ifneq ($(LUA), luajit)
 LUA_BITS = $(shell $(LUA_APP) -e "print(string.len(string.pack('T', 0)) * 8)")
+endif
 
 ifeq ($(LUA_BITS),32)
   WEBVIEW_ARCH = x86
+endif
 endif
 
 WEBVIEW_C = webview-c
