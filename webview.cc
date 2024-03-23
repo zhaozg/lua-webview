@@ -27,7 +27,7 @@ static int lua_webview_open(lua_State *L)
   int width = luaL_optint(L, 3, 800);
   int height = luaL_optint(L, 4, 600);
   const char* shits[] = { "none", "min", "max", "fixed" };
-  int hints = luaL_checkoption(L, 5, "none", shits);
+  webview_hint_t hints = (webview_hint_t)luaL_checkoption(L, 5, "none", shits);
   int dbg = lua_toboolean(L, 6);
   webview_t w = webview_create(dbg, nullptr);
 
@@ -180,7 +180,7 @@ static int lua_webview_size(lua_State *L)
   int width = luaL_checkint(L, 2);
   int height = luaL_checkint(L, 3);
   const char* shits[] = { "none", "min", "max", "fixed" };
-  int hints = luaL_checkoption(L, 4, "none", shits);
+  webview_hint_t hints = (webview_hint_t)luaL_checkoption(L, 4, "none", shits);
 
   // Updates native window size. See WEBVIEW_HINT constants.
   webview_set_size(w, width, height, hints);
