@@ -1,6 +1,6 @@
 ## Overview
 
-The Lua webview module provides functions to open a web page in a dedicated window from Lua.
+The Lua webview module provides functions to open a web page in a dedicated window from [Lua](http://www.lua.org/).
 
 ```lua
 require('webview').open('http://www.lua.org/')
@@ -13,14 +13,24 @@ Lua can evaluate JavaScript code and JavaScript can call a registered Lua functi
 This module is a binding of the tiny cross-platform [webview-c](https://github.com/javalikescript/webview-c) C library.
 
 This module is part of the [luaclibs](https://github.com/javalikescript/luaclibs) project,
-the binaries can be found on the [luajls](http://javalikescript.free.fr/lua/) page.
+the binaries can be found on the [luajls](https://github.com/javalikescript/luajls/releases/latest) releases.
 You could also install it using [LuaRocks](#luarocks).
 
 Lua webview is covered by the MIT license.
 
+## Build
+
+The Lua webview module could be build using the rock makefile.
+
+```lua
+make -f rock.mk PLAT=windows MAKE=make CC=gcc LD=gcc LUA_LIBDIR=.../lib LUA_INCDIR=.../include LUA=.../bin/lua54.exe
+```
+
 ## Usage
 
-[Fast Cut](https://github.com/javalikescript/fcut) allows to visually cut and join videos then export losslessly thanks to FFmpeg.
+[Fast Cut](https://github.com/javalikescript/fcut) is an advanced example of webview usage.
+
+It allows to visually cut and join videos then export them losslessly thanks to FFmpeg.
 
 ## Launcher
 
@@ -70,8 +80,9 @@ lua examples/open.lua %CD%\examples\htdocs\todo.html
 <img src="https://javalikescript.github.io/lua-webview/screenshots/lua-webview-todo-windows.png" />
 
 Pure Lua
+
 ```sh
-wlua53 examples/simple.lua
+wlua54 examples/simple.lua
 ```
 
 <img src="https://javalikescript.github.io/lua-webview/screenshots/lua-webview-simple-linux.png" />

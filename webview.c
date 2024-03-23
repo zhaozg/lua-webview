@@ -1,5 +1,4 @@
 #include <lua.h>
-#include <lualib.h>
 #include <lauxlib.h>
 
 #define WEBVIEW_IMPLEMENTATION
@@ -13,7 +12,7 @@
 ********************************************************************************
 */
 
-#if LUA_VERSION_NUM < 502 && !defined(LUA_JITLIBNAME)
+#if LUA_VERSION_NUM < 502
 // From Lua 5.3 lauxlib.c
 LUALIB_API void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
   luaL_checkstack(L, nup, "too many upvalues");
@@ -110,23 +109,29 @@ static int lua_webview_open(lua_State *l) {
 
 static LuaWebView *lua_webview_asudata(lua_State *l, int ud) {
 	if (lua_islightuserdata(l, ud)) {
-		return (LuaWebView *)lua_touserdata(l, ud);
+		return lua_touserdata(l, ud);
 	}
 	return (LuaWebView *)luaL_checkudata(l, ud, "webview");
 }
 
 static LuaWebView * lua_webview_newuserdata(lua_State *l) {
-	const char *url = luaL_optstring(l, 1, "");
-	const char *title = luaL_optstring(l, 2, "Lua Web View");
+	size_t urlLen;
+	size_t titleLen;
+	const char *url = luaL_optlstring(l, 1, "", &urlLen);
+	const char *title = luaL_optlstring(l, 2, "Lua Web View", &titleLen);
 	lua_Integer width = luaL_optinteger(l, 3, 800);
 	lua_Integer height = luaL_optinteger(l, 4, 600);
 	lua_Integer resizable = lua_toboolean(l, 5);
 	lua_Integer debug = lua_toboolean(l, 6);
-	LuaWebView *lwv = (LuaWebView *)lua_newuserdata(l, sizeof(LuaWebView));
+	LuaWebView *lwv = (LuaWebView *)lua_newuserdata(l, sizeof(LuaWebView) + titleLen + 1 + urlLen + 1);
+	char *titleCopy = ((char *)lwv) + sizeof(LuaWebView);
+	char *urlCopy = ((char *)lwv) + sizeof(LuaWebView) + titleLen + 1;
 	memset(lwv, 0, sizeof(LuaWebView));
+	memcpy(titleCopy, title, titleLen + 1);
+	memcpy(urlCopy, url, urlLen + 1);
 	lwv->initState = NULL;
-	lwv->webview.url = url;
-	lwv->webview.title = title;
+	lwv->webview.title = titleCopy;
+	lwv->webview.url = urlCopy;
 	lwv->webview.width = width;
 	lwv->webview.height = height;
 	lwv->webview.resizable = resizable;
@@ -158,24 +163,6 @@ static int lua_webview_init(lua_State *l) {
 	LuaWebView *lwv = (LuaWebView *)lua_webview_asudata(l, 1);
 	int initialized = 0;
 	if (lwv->initState == NULL) {
-		if (lua_isstring(l, 1)) {
-			lwv->webview.url = lua_tostring(l, 1);
-		}
-		if (lua_isstring(l, 2)) {
-			lwv->webview.title = lua_tostring(l, 2);
-		}
-		if (lua_isnumber(l, 3)) {
-			lwv->webview.width = lua_tointeger(l, 3);
-		}
-		if (lua_isnumber(l, 4)) {
-			lwv->webview.height = lua_tointeger(l, 4);
-		}
-		if (lua_isboolean(l, 5)) {
-			lwv->webview.resizable = lua_toboolean(l, 5);
-		}
-		if (lua_isboolean(l, 6)) {
-			lwv->webview.debug = lua_toboolean(l, 6);
-		}
 		int r = webview_init(&lwv->webview);
 		if (r == 0) {
 			initialized = 1;
@@ -301,13 +288,13 @@ static int lua_webview_clean(lua_State *l) {
 
 static int lua_webview_lighten(lua_State *l) {
 	LuaWebView *lwv = (LuaWebView *)luaL_checkudata(l, 1, "webview");
-	lua_pushlightuserdata(l, lwv);
+ 	lua_pushlightuserdata(l, lwv);
 	return 1;
 }
 
 static int lua_webview_asstring(lua_State *l) {
 	LuaWebView *lwv = (LuaWebView *)luaL_checkudata(l, 1, "webview");
-	lua_pushlstring(l, (const char *) &lwv, sizeof(void *));
+ 	lua_pushlstring(l, (const char *) &lwv, sizeof(void *));
 	return 1;
 }
 
@@ -327,93 +314,19 @@ static int lua_webview_gc(lua_State *l) {
 	return 0;
 }
 
-static int is_non_symbol(char c)
-{
-    if(c == '\0') return 1; //we want to write null regardless
-    int c_int = (int)c;
-    return (c_int >= 48 && c_int <= 57) ||
-	   (c_int >= 65 && c_int <= 90) ||
-	   (c_int >= 97 && c_int <= 122);
-}
-
-static char *url_decode(const char *input, size_t input_length)
-{
-	input_length = input_length > 0 ? input_length : strlen(input);
-	size_t output_length = (input_length + 1) * sizeof(char);
-	char *working = (char *)malloc(output_length), *output = working;
-
-	while(*input)
-	{
-		if(*input == '%')
-		{
-			char buffer[3] = { input[1], input[2], 0 };
-			*working++ = strtol(buffer, NULL, 16);
-			input += 3;
-		}
-		else
-		{
-			*working++ = *input++;
-		}
+#if defined(WEBVIEW2_MEMORY_MODULE)
+static int lua_webview_loadWebView2Dll(lua_State *l) {
+	void *data;
+	size_t len = 0;
+	int status = 0;
+	data = lua_tolstring(l, 1, &len);
+	if (data != NULL && len > 0 && WebView2Load(data, len)) {
+		status = 1;
 	}
-
-	*working = 0; //null terminate
-	return output;
-}
-
-char *url_encode(const char *input, size_t input_length)
-{
-    input_length = input_length>0 ? input_length : strlen(input);
-    size_t final_size = (input_length * 3) + 1;
-    char *working = (char *)malloc(final_size * sizeof(char)), *output = working;
-
-    while(*input)
-    {
-        const char c = *input;
-        if(c < 0)
-        {
-            input++;
-        }
-        else if(is_non_symbol(c))
-        {
-            *working++ = *input++;
-        }
-        else
-        {
-            char encoded[4] = {0};
-            snprintf(encoded, 4, "%%%02x", c);
-
-            *working++ = encoded[0];
-            *working++ = encoded[1];
-            *working++ = encoded[2];
-            input++;
-        }
-    }
-
-    *working = 0; //null term
-    return output;
-}
-
-static int lua_urlencode(lua_State *L)
-{
-	size_t sz;
-	const char* input = luaL_checklstring(L, 1, &sz);
-	char* encoded = url_encode(input, sz);
-
-	lua_pushstring(L, encoded);
-	free(encoded);
+	lua_pushboolean(l, status);
 	return 1;
 }
-
-static int lua_urldecode(lua_State *L)
-{
-	size_t sz;
-	const char* input = luaL_checklstring(L, 1, &sz);
-	char* decoded = url_decode(input, sz);
-
-	lua_pushstring(L, decoded);
-	free(decoded);
-	return 1;
-}
+#endif
 
 LUALIB_API int luaopen_webview(lua_State *l) {
 	luaL_newmetatable(l, "webview");
@@ -436,9 +349,9 @@ LUALIB_API int luaopen_webview(lua_State *l) {
 		{ "lighten", lua_webview_lighten },
 		{ "asstring", lua_webview_asstring },
 		{ "fromstring", lua_webview_fromstring },
-
-		{ "urlencode", lua_urlencode },
-		{ "urldecode", lua_urldecode },
+#if defined(WEBVIEW2_MEMORY_MODULE)
+		{ "loadWebView2Dll", lua_webview_loadWebView2Dll },
+#endif
 		{ NULL, NULL }
 	};
 	lua_newtable(l);

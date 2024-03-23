@@ -1,5 +1,3 @@
-local webviewLib = require('webview')
-
 -- Default web content
 local url = "data:text/html," .. webviewLib.urlencode [[<!DOCTYPE html>
 <html>
