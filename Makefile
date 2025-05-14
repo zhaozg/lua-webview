@@ -1,32 +1,28 @@
-PLAT ?= darwin
+PLAT   ?= linux
 LIBNAME = webview
 
 
-LUA ?= /usr/local/bin/luajit
-LUA_VERSION = $(shell $(LUA) -e "print(string.sub(_VERSION, 5))")
-LUA_LIBNAME = lua$(subst .,,$(LUA_VERSION))
-LUA_INCDIR ?= /usr/local/include/luajit-2.1
-LUA_LIBDIR ?= /usr/local/lib
+LUA ?= luajit
+LUA_VERSION  = $(shell $(LUA) -e "print(string.sub(_VERSION, 5))")
+LUA_CFLAGS  ?= $(shell pkg-config --cflags $(LUA))
+LUA_LDFLAGS ?= $(shell pkg-config --libs $(LUA))
 INST_LIBDIR ?= /usr/local/lib/lua/5.1
 
-CFLAGS_darwin = -Wall -Wextra -pedantic -I$(LUA_INCDIR)
-LIBFLAG_darwin = -shared -framework WebKit $(LUA_LIBDIR)/libluajit-5.1.a
+CFLAGS_darwin = -Wall -Wextra -pedantic
+LIBFLAG_darwin = -framework WebKit
 TARGET_darwin = $(LIBNAME).so
 
-
-CFLAGS_windows = -Wall -Wextra -Wno-unused-parameter -Wstrict-prototypes \
-		 -I$(LUA_INCDIR)
-LIBFLAG_windows = -O -shared -Wl,-s -L$(LUA_LIBDIR) -l$(LUA_LIBNAME) -static-libgcc \
-		  -lole32 -lcomctl32 -loleaut32 -luuid -mwindows
+CFLAGS_windows = -Wall -Wextra -Wno-unused-parameter -Wstrict-prototypes
+LIBFLAG_windows = -O -Wl,-s -static-libgcc -lole32 -lcomctl32 -loleaut32 -luuid -mwindows
 TARGET_windows = $(LIBNAME).dll
 
-CFLAGS_linux = -pedantic  -Wall -Wextra -Wno-unused-parameter -Wstrict-prototypes -I$(LUA_INCDIR) \
+CFLAGS_linux = -fPIC -pedantic  -Wall -Wextra -Wno-unused-parameter -Wstrict-prototypes \
 	       -DWEBVIEW_GTK=1 $(shell pkg-config --cflags gtk+-3.0 webkit2gtk-4.0)
-LIBFLAG_linux= -static-libgcc -Wl,-s  -L$(LUA_LIBDIR) $(shell pkg-config --libs gtk+-3.0 webkit2gtk-4.0)
+LIBFLAG_linux= -static-libgcc -Wl,-s $(shell pkg-config --libs gtk+-3.0 webkit2gtk-4.0)
 TARGET_linux = $(LIBNAME).so
 
-
-CFLAGS+= $(CFLAGS_$(PLAT))
+CFLAGS   += $(LUA_CFLAGS) $(CFLAGS_$(PLAT))
+LIBFLAGS += $(LIBFLAG_$(PLAT)) $(LUA_LDFLAGS)
 
 TARGET = $(TARGET_$(PLAT))
 
@@ -44,14 +40,9 @@ install:
 show:
 	@echo PLAT: $(PLAT)
 	@echo LUA_VERSION: $(LUA_VERSION)
-	@echo LUA_LIBNAME: $(LUA_LIBNAME)
 	@echo CFLAGS: $(CFLAGS)
 	@echo LIBFLAG: $(LIBFLAG)
-	@echo LUA_LIBDIR: $(LUA_LIBDIR)
-	@echo LUA_BINDIR: $(LUA_BINDIR)
-	@echo LUA_INCDIR: $(LUA_INCDIR)
 	@echo LUA: $(LUA)
-	@echo LUALIB: $(LUALIB)
 
 show-install:
 	@echo PREFIX: $(PREFIX) or $(INST_PREFIX)
@@ -60,7 +51,7 @@ show-install:
 	@echo LUADIR: $(LUADIR) or $(INST_LUADIR)
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) $(LIBFLAG) $(LIBFLAG_$(PLAT)) -o $(TARGET)
+	$(CC) -shared $(OBJS) $(LIBFLAGS) -o $(TARGET)
 
 clean:
 	-$(RM) $(OBJS) $(TARGET)
