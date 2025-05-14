@@ -309,6 +309,30 @@ local function callJs(webview, functionName, ...)
   webviewLib.eval(webview, jsString, true)
 end
 
+-- internal dispatch callback
+local function dispatch(uv, webview)
+  local webexit, fired, uvwait = false, false, false
+  webexit, fired = webviewLib.loop(webview, 'nowait')
+  if webexit then return end
+  uvwait = uv.run('nowait')
+
+  local function mode()
+    return (fired or uvwait) and 'nowait' or 'once'
+  end
+
+  while not uvwait do
+    webexit, fired = webviewLib.loop(webview, mode())
+    uvwait = uv.run(mode())
+  end
+
+  while not fired do
+    uvwait = uv.run(mode())
+    webexit, fired = webviewLib.loop(webview, mode())
+  end
+
+  return webexit
+end
+
 -- Creates the webview context and sets the callback and default functions
 local function createContext(webview, options)
   local initialized = false
@@ -359,6 +383,17 @@ local function createContext(webview, options)
     end,
   }
 
+  if options.uv then
+    context.uv = options.uv
+    context.dispatch = function(cb, ...)
+      if cb then
+        cb(...)
+      else
+        dispatch(context.uv, webview)
+      end
+    end
+  end
+
   if options and type(options.expose) == 'table' then
     context.exposeAll(options.expose)
   end
@@ -371,7 +406,7 @@ local function createContext(webview, options)
 
   -- Creates the web view callback that handles the JS requests coming from window.external.invoke()
   local handler = function(request)
-    local flag, name, kind, value = string.match(request, '^(%A?)(%a%w*)([:;])(.*)$')
+    local flag, name, kind, value = string.match(request, '^(%A?)([%_%$%a][%_%$%w]*)([:;])(.*)$')
     if name then
       if flag == '' or flag == '#' then
         -- Look for the specified function
@@ -424,6 +459,10 @@ local function createContext(webview, options)
       elseif name == 'init' and flag == ':' then
         initialized = true
         initializeJs(webview, functionMap, options)
+
+        if options and options.initialize then
+          options.initialize(webviewLib, webview, context, options)
+        end
       else
         printError('Invalid flag '..flag..' for name '..name)
       end
@@ -579,46 +618,21 @@ end
 local function launchWithOptions(url, wvOptions, options)
   wvOptions = wvOptions or {}
   options = options or wvOptions
-  if options.eventMode then
-    local event = require('jls.lang.event')
-    local WebView = require('jls.util.WebView')
-    if options.eventMode == 'thread' then
-      --webviewLib.open('data:text/html,<html><body>Close to start</body></thread>', 'Close to start', 320, 200)
-      WebView.open(url, wvOptions):next(function(webview)
-        local callback = createContextAndPath(webview._webview, options)
-        webview:callback(callback)
-      end)
-    elseif options.eventMode == 'http' then
-      if not options.context.luaSrcPath then
-        error('Please specify a file path as URL')
-      end
-      local FileHttpHandler = require('jls.net.http.handler.FileHttpHandler')
-      options.callback = true
-      options.contexts = {
-        ['/(.*)'] = FileHttpHandler:new(options.context.luaSrcPath or '.')
-      }
-      local filename = string.match(url, '^.*[/\\]([^/\\]+)$')
-      WebView.open('http://localhost:0/'..filename, options):next(function(webview)
-        local callback = createContextAndPath(webview._webview, options)
-        webview:callback(callback)
-      end)
-    else
-      local open = options.eventMode == 'main' and WebView.openSync or WebView.open
-      wvOptions.fn = function(webview, data)
-        local webviewLauncher = require('webview-launcher')
-        local opts = webviewLauncher.jsonLib.decode(data)
-        local callback = webviewLauncher.createContextAndPath(webview._webview, opts)
-        webview:callback(callback)
-      end
-      wvOptions.data = jsonLib.encode(options)
-      open(url, wvOptions)
-    end
-    event:loop()
+  local _, uv = pcall(require, 'luv')
+  if not _ then
+    uv = nil
+  end
+  options.uv = uv
+
+  local webview = webviewLib.new(url, wvOptions.title, wvOptions.width, wvOptions.height, wvOptions.resizable, wvOptions.debug)
+  local callback = createContext(webview, options)
+  webviewLib.callback(webview, callback)
+
+  if not uv then
+    webviewLib.loop(webview, "default")
   else
-    local webview = webviewLib.new(url, wvOptions.title, wvOptions.width, wvOptions.height, wvOptions.resizable, wvOptions.debug)
-    local callback = createContext(webview, options)
-    webviewLib.callback(webview, callback)
-    webviewLib.loop(webview)
+    repeat
+    until dispatch(uv, webview)
   end
 end
 

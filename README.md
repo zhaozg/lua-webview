@@ -53,13 +53,15 @@ or using a Lua file
 <script src="assets/FileChooser.lua" type="text/lua"></script>
 ```
 
-Additionally a JavaScript file `webview-init.js` is available to deal with the launcher initialization including in case of reloading.
+Additionally a JavaScript file `webview-init.js` is available to deal with the launcher initialization
+including in case of reloading.
 
 The launcher supports events in Lua when used with [luajls](https://github.com/javalikescript/luajls).
 
 ## Examples
 
 Using an HTTP server
+
 ```sh
 lua examples/calc.lua
 ```
@@ -68,6 +70,7 @@ lua examples/calc.lua
 <img src="https://javalikescript.github.io/lua-webview/screenshots/lua-webview-calc-windows.png" />
 
 Using the file system
+
 ```sh
 lua examples/open.lua %CD%\examples\htdocs\todo.html
 ```
@@ -76,6 +79,7 @@ lua examples/open.lua %CD%\examples\htdocs\todo.html
 <img src="https://javalikescript.github.io/lua-webview/screenshots/lua-webview-todo-windows.png" />
 
 Pure Lua
+
 ```sh
 wlua54 examples/simple.lua
 ```
@@ -84,6 +88,7 @@ wlua54 examples/simple.lua
 <img src="https://javalikescript.github.io/lua-webview/screenshots/lua-webview-simple-windows.png" />
 
 Generic launcher, with helper function to pass JSON objects and more
+
 ```sh
 lua examples/launch.lua examples/htdocs/simple.html --wv-event=thread
 ```
@@ -95,6 +100,7 @@ Lua webview can be intalled using LuaRocks
 ### LuaRocks on Linux
 
 Prerequisites:
+
 ```sh
 sudo apt install luarocks lua5.3 lua5.3-dev
 sudo apt install libgtk-3-dev libwebkit2gtk-4.0-dev
@@ -110,8 +116,8 @@ Prerequisites:
 Download the Lua 64 bits dynamic libraries built with MinGW-w64 from [Lua Binaries](https://sourceforge.net/projects/luabinaries/).
 Add [MSYS2](https://www.msys2.org/), MinGW-w64 and [git](https://git-scm.com/) in the path.
 
-
 ```Batchfile
 luarocks --lua-dir C:/bin/lua-5.3.5 MAKE=make CC=gcc LD=gcc install lua-webview
 ```
+
 Take care to use forward slashes for the Lua path.
